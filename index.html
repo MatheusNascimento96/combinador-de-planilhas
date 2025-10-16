@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuzzy Match - Combinador de Planilhas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Biblioteca para ler e escrever arquivos Excel (.xlsx) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Biblioteca para correspondência de strings (fuzzy matching), similar ao rapidfuzz -->
+    <script src="https://cdn.jsdelivr.net/npm/fuzzball@2.1.2/dist/fuzzball.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .file-input-container {
+            position: relative;
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .file-input-container:hover {
+            background-color: #f8fafc;
+            border-color: #94a3b8;
+        }
+        .file-input-container input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">Combinador Inteligente de Planilhas</h1>
+            <p class="text-slate-500 mt-2">Compare duas planilhas e encontre correspondências por aproximação (Fuzzy Match).</p>
+        </header>
+
+        <main>
+            <!-- Seção de Upload e Configuração -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Coluna da Base 1 -->
+                <div class="space-y-4">
+                    <h2 class="text-xl font-semibold text-slate-700 border-b pb-2">Base de Dados 1 (A pesquisar)</h2>
+                    <div id="file-drop-zone-1" class="file-input-container">
+                        <span id="file-name-1" class="text-slate-500">Arraste e solte o arquivo ou clique aqui</span>
+                        <input type="file" id="base1-file" accept=".xlsx, .xls, .csv">
+                    </div>
+                    <div>
+                        <label for="base1-sheet" class="block text-sm font-medium text-slate-600">Nome da Aba</label>
+                        <input type="text" id="base1-sheet" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ex: Plan1">
+                    </div>
+                    <div>
+                        <label for="base1-column" class="block text-sm font-medium text-slate-600">Coluna a ser pesquisada</label>
+                        <input type="text" id="base1-column" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ex: Nome do Cliente">
+                    </div>
+                </div>
+
+                <!-- Coluna da Base 2 -->
+                <div class="space-y-4">
+                    <h2 class="text-xl font-semibold text-slate-700 border-b pb-2">Base de Dados 2 (Onde pesquisar)</h2>
+                     <div id="file-drop-zone-2" class="file-input-container">
+                        <span id="file-name-2" class="text-slate-500">Arraste e solte o arquivo ou clique aqui</span>
+                        <input type="file" id="base2-file" accept=".xlsx, .xls, .csv">
+                    </div>
+                    <div>
+                        <label for="base2-sheet" class="block text-sm font-medium text-slate-600">Nome da Aba</label>
+                        <input type="text" id="base2-sheet" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ex: Base Completa">
+                    </div>
+                    <div>
+                        <label for="base2-column" class="block text-sm font-medium text-slate-600">Coluna que será pesquisada</label>
+                        <input type="text" id="base2-column" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ex: Razao Social">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Seção de Pontuação e Botão -->
+            <div class="mt-8 pt-6 border-t">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+                    <div>
+                        <label for="score-threshold" class="block text-sm font-medium text-slate-600 text-center">Pontuação Mínima de Correspondência (%)</label>
+                        <input type="number" id="score-threshold" value="90" min="0" max="100" class="mt-1 w-32 px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-center text-lg">
+                    </div>
+                    <button id="process-button" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Combinar Planilhas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Seção de Resultados -->
+            <div id="results-section" class="mt-10 hidden">
+                <div id="status-container" class="flex items-center justify-center gap-4 p-4 rounded-lg bg-slate-100">
+                    <div id="loader" class="loader hidden"></div>
+                    <p id="status-message" class="text-slate-600 font-medium"></p>
+                </div>
+
+                <div id="download-container" class="text-center mt-6 hidden">
+                     <button id="download-button" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Download do Resultado
+                    </button>
+                </div>
+                
+                <div class="mt-6 overflow-x-auto">
+                    <h3 class="text-lg font-semibold mb-2">Prévia dos Resultados:</h3>
+                    <table id="results-table" class="min-w-full bg-white border border-slate-200">
+                        <!-- O cabeçalho e as linhas da tabela serão inseridos via JavaScript -->
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+<script>
+    // Armazena os resultados finais para download
+    let finalResults = [];
+
+    // Lógica para arrastar e soltar arquivos
+    function setupFileDrop(zoneId, inputId, nameId) {
+        const dropZone = document.getElementById(zoneId);
+        const fileInput = document.getElementById(inputId);
+        const fileNameSpan = document.getElementById(nameId);
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('bg-blue-50', 'border-blue-400');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('bg-blue-50', 'border-blue-400');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-blue-50', 'border-blue-400');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                fileNameSpan.textContent = fileInput.files[0].name;
+            }
+        });
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                fileNameSpan.textContent = fileInput.files[0].name;
+            } else {
+                 fileNameSpan.textContent = 'Arraste e solte o arquivo ou clique aqui';
+            }
+        });
+    }
+
+    setupFileDrop('file-drop-zone-1', 'base1-file', 'file-name-1');
+    setupFileDrop('file-drop-zone-2', 'base2-file', 'file-name-2');
+
+    const processButton = document.getElementById('process-button');
+    const downloadButton = document.getElementById('download-button');
+    
+    const resultsSection = document.getElementById('results-section');
+    const statusContainer = document.getElementById('status-container');
+    const statusMessage = document.getElementById('status-message');
+    const loader = document.getElementById('loader');
+    const downloadContainer = document.getElementById('download-container');
+
+
+    // Função para ler arquivo Excel e retornar os dados da aba especificada
+    function readExcelFile(file, sheetName) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    let targetSheetName = sheetName;
+                    if (!targetSheetName) {
+                        targetSheetName = workbook.SheetNames[0]; // Usa a primeira aba se nenhuma for especificada
+                    }
+                    
+                    const worksheet = workbook.Sheets[targetSheetName];
+                    if (!worksheet) {
+                        reject(new Error(`Aba "${targetSheetName}" não encontrada no arquivo.`));
+                        return;
+                    }
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                    resolve(jsonData);
+                } catch (err) {
+                    reject(err);
+                }
+            };
+            reader.onerror = (error) => reject(error);
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    function showStatus(message, isLoading = false) {
+        resultsSection.classList.remove('hidden');
+        statusContainer.classList.remove('hidden');
+        statusMessage.textContent = message;
+        if (isLoading) {
+            loader.classList.remove('hidden');
+            downloadContainer.classList.add('hidden');
+        } else {
+            loader.classList.add('hidden');
+        }
+    }
+
+    function hideStatus() {
+        statusContainer.classList.add('hidden');
+    }
+
+    function displayResultsPreview(data) {
+        const table = document.getElementById('results-table');
+        table.innerHTML = ''; // Limpa a tabela anterior
+
+        if (data.length === 0) {
+            hideStatus();
+            return;
+        }
+
+        const previewData = data.slice(0, 10); // Mostra apenas as 10 primeiras linhas
+
+        // Cria o cabeçalho
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        headerRow.className = 'bg-slate-100';
+        const headers = Object.keys(previewData[0]);
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            th.className = 'px-4 py-2 text-left text-sm font-semibold text-slate-600';
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Cria o corpo da tabela
+        const tbody = document.createElement('tbody');
+        previewData.forEach(rowData => {
+            const row = document.createElement('tr');
+            row.className = 'border-b border-slate-200';
+            headers.forEach(header => {
+                const td = document.createElement('td');
+                td.textContent = rowData[header];
+                td.className = 'px-4 py-2 text-sm text-slate-700';
+                row.appendChild(td);
+            });
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+    }
+    
+    // Função principal que executa o processo de combinação
+    processButton.addEventListener('click', async () => {
+        // 1. Coleta dos dados do formulário
+        const file1 = document.getElementById('base1-file').files[0];
+        const sheet1 = document.getElementById('base1-sheet').value.trim();
+        const column1 = document.getElementById('base1-column').value.trim();
+        
+        const file2 = document.getElementById('base2-file').files[0];
+        const sheet2 = document.getElementById('base2-sheet').value.trim();
+        const column2 = document.getElementById('base2-column').value.trim();
+
+        const scoreThreshold = parseInt(document.getElementById('score-threshold').value, 10);
+
+        // 2. Validação dos inputs
+        if (!file1 || !file2 || !column1 || !column2) {
+            alert('Por favor, preencha todos os campos obrigatórios: arquivos e nomes das colunas.');
+            return;
+        }
+
+        showStatus('Iniciando o processamento...', true);
+
+        try {
+            // 3. Leitura dos arquivos Excel
+            showStatus('Lendo os arquivos Excel...', true);
+            const data1 = await readExcelFile(file1, sheet1);
+            const data2 = await readExcelFile(file2, sheet2);
+
+            if (!data1.length || !data2.length) {
+                throw new Error("Um dos arquivos está vazio ou a aba especificada não contém dados.");
+            }
+            if (!data1[0].hasOwnProperty(column1) || !data2[0].hasOwnProperty(column2)) {
+                throw new Error("Nome da coluna não encontrado em um dos arquivos. Verifique a digitação.");
+            }
+
+            // 4. Lógica de Fuzzy Matching
+            showStatus(`Combinando ${data1.length} registros... Isso pode levar um momento.`, true);
+            
+            // Prepara a lista de opções da Base 2 para a busca
+            const choices = data2.map(row => String(row[column2]));
+            const matches = [];
+
+            // Simula um processamento assíncrono para não travar a UI em grandes arquivos
+            await new Promise(resolve => setTimeout(resolve, 50));
+
+            data1.forEach((row1, index1) => {
+                const query = String(row1[column1]);
+                if (!query) return;
+
+                // Usa fuzzball.extractOne para encontrar a melhor correspondência
+                const bestMatch = fuzzball.extractOne(query, choices, {
+                    scorer: fuzzball.partial_ratio,
+                    score_cutoff: scoreThreshold
+                });
+
+                if (bestMatch) {
+                    const [matchValue, score, index2] = bestMatch;
+                    const row2 = data2[index2];
+
+                    // Renomeia colunas da base 2 para evitar conflitos ao juntar
+                    const suffixedRow2 = {};
+                    for (const key in row2) {
+                        suffixedRow2[`${key}_base2`] = row2[key];
+                    }
+                    
+                    // Combina os dados
+                    matches.push({
+                        'Chave_Base1': query,
+                        ...row1,
+                        'Chave_Encontrada_Base2': matchValue,
+                        'Score': Math.round(score),
+                        ...suffixedRow2,
+                    });
+                }
+            });
+
+            finalResults = matches;
+
+            // 5. Exibição dos resultados
+            if (finalResults.length > 0) {
+                showStatus(`Processo concluído! ${finalResults.length} correspondências encontradas.`);
+                downloadContainer.classList.remove('hidden');
+                displayResultsPreview(finalResults);
+            } else {
+                showStatus('Nenhuma correspondência encontrada com a pontuação mínima especificada.');
+                document.getElementById('results-table').innerHTML = '';
+            }
+
+        } catch (error) {
+            console.error(error);
+            showStatus(`Erro: ${error.message}`);
+            alert(`Ocorreu um erro: ${error.message}`);
+        }
+    });
+
+    // Função para fazer o download do resultado em Excel
+    downloadButton.addEventListener('click', () => {
+        if (finalResults.length === 0) {
+            alert('Não há dados para download.');
+            return;
+        }
+        
+        const worksheet = XLSX.utils.json_to_sheet(finalResults);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Resultados');
+        
+        // Gera o arquivo e inicia o download
+        XLSX.writeFile(workbook, 'Resultado_Combinado.xlsx');
+    });
+
+</script>
+
+</body>
+</html>
