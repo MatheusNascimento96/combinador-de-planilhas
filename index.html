@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fuzzy Match - Combinador de Planilhas</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Biblioteca para ler e escrever arquivos Excel (.xlsx) -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- Biblioteca para correspondência de strings (fuzzy matching), similar ao rapidfuzz -->
-    <script src="https://cdn.jsdelivr.net/npm/fuzzball@2.1.2/dist/fuzzball.min.js"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -57,10 +54,10 @@
     <div class="w-full max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-lg">
         <header class="text-center mb-8">
             <h1 class="text-3xl font-bold text-slate-900">Combinador Inteligente de Planilhas</h1>
-            <p class="text-slate-500 mt-2">Compare duas planilhas e encontre correspondências por aproximação (Fuzzy Match).</p>
+            <p class="text-slate-500 mt-2">Compare duas planilhas e encontre correspondências por aproximação.</p>
         </header>
 
-        <main>
+        <main id="main-content">
             <!-- Seção de Upload e Configuração -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <!-- Coluna da Base 1 -->
@@ -71,12 +68,16 @@
                         <input type="file" id="base1-file" accept=".xlsx, .xls, .csv">
                     </div>
                     <div>
-                        <label for="base1-sheet" class="block text-sm font-medium text-slate-600">Nome da Aba</label>
-                        <input type="text" id="base1-sheet" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ex: Plan1">
+                        <label for="base1-sheet" class="block text-sm font-medium text-slate-600">Selecione a Aba</label>
+                        <select id="base1-sheet" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200" disabled>
+                            <option value="">Selecione um arquivo primeiro</option>
+                        </select>
                     </div>
                     <div>
-                        <label for="base1-column" class="block text-sm font-medium text-slate-600">Coluna a ser pesquisada</label>
-                        <input type="text" id="base1-column" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ex: Nome do Cliente">
+                        <label for="base1-column" class="block text-sm font-medium text-slate-600">Selecione a Coluna</label>
+                         <select id="base1-column" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200" disabled>
+                            <option value="">Selecione uma aba primeiro</option>
+                        </select>
                     </div>
                 </div>
 
@@ -88,12 +89,16 @@
                         <input type="file" id="base2-file" accept=".xlsx, .xls, .csv">
                     </div>
                     <div>
-                        <label for="base2-sheet" class="block text-sm font-medium text-slate-600">Nome da Aba</label>
-                        <input type="text" id="base2-sheet" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ex: Base Completa">
+                        <label for="base2-sheet" class="block text-sm font-medium text-slate-600">Selecione a Aba</label>
+                         <select id="base2-sheet" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200" disabled>
+                            <option value="">Selecione um arquivo primeiro</option>
+                        </select>
                     </div>
                     <div>
-                        <label for="base2-column" class="block text-sm font-medium text-slate-600">Coluna que será pesquisada</label>
-                        <input type="text" id="base2-column" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Ex: Razao Social">
+                        <label for="base2-column" class="block text-sm font-medium text-slate-600">Selecione a Coluna</label>
+                        <select id="base2-column" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-slate-50 disabled:text-slate-500 disabled:border-slate-200" disabled>
+                            <option value="">Selecione uma aba primeiro</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -102,8 +107,8 @@
             <div class="mt-8 pt-6 border-t">
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
                     <div>
-                        <label for="score-threshold" class="block text-sm font-medium text-slate-600 text-center">Pontuação Mínima de Correspondência (%)</label>
-                        <input type="number" id="score-threshold" value="90" min="0" max="100" class="mt-1 w-32 px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-center text-lg">
+                        <label for="score-threshold" class="block text-sm font-medium text-slate-600 text-center">Pontuação Mínima de Similaridade (%)</label>
+                        <input type="number" id="score-threshold" value="85" min="0" max="100" class="mt-1 w-32 px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-center text-lg">
                     </div>
                     <button id="process-button" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Combinar Planilhas
@@ -115,7 +120,7 @@
             <div id="results-section" class="mt-10 hidden">
                 <div id="status-container" class="flex items-center justify-center gap-4 p-4 rounded-lg bg-slate-100">
                     <div id="loader" class="loader hidden"></div>
-                    <p id="status-message" class="text-slate-600 font-medium"></p>
+                    <p id="status-message" class="font-medium"></p>
                 </div>
 
                 <div id="download-container" class="text-center mt-6 hidden">
@@ -134,253 +139,354 @@
         </main>
     </div>
 
+    <!-- Biblioteca para ler Excel. A lógica de Fuzzy Match agora é interna. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
 <script>
-    // Armazena os resultados finais para download
-    let finalResults = [];
+    window.addEventListener('DOMContentLoaded', () => {
+        // VERIFICAÇÃO DE BIBLIOTECA XLSX
+        if (typeof XLSX === 'undefined') {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = `
+                <div class="p-4 rounded-md bg-red-50 text-red-700 text-center">
+                    <h3 class="text-lg font-bold">Erro Crítico de Carregamento</h3>
+                    <p class="mt-2">Não foi possível carregar a biblioteca para leitura de planilhas.</p>
+                    <p class="mt-1">Por favor, <strong>verifique sua conexão com a internet</strong>, <strong>desative bloqueadores de anúncio (AdBlock)</strong> e <strong>recarregue a página</strong>.</p>
+                </div>
+            `;
+            return;
+        }
 
-    // Lógica para arrastar e soltar arquivos
-    function setupFileDrop(zoneId, inputId, nameId) {
-        const dropZone = document.getElementById(zoneId);
-        const fileInput = document.getElementById(inputId);
-        const fileNameSpan = document.getElementById(nameId);
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('bg-blue-50', 'border-blue-400');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('bg-blue-50', 'border-blue-400');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('bg-blue-50', 'border-blue-400');
-            if (e.dataTransfer.files.length) {
-                fileInput.files = e.dataTransfer.files;
-                fileNameSpan.textContent = fileInput.files[0].name;
-            }
-        });
-        
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length) {
-                fileNameSpan.textContent = fileInput.files[0].name;
-            } else {
-                 fileNameSpan.textContent = 'Arraste e solte o arquivo ou clique aqui';
-            }
-        });
-    }
-
-    setupFileDrop('file-drop-zone-1', 'base1-file', 'file-name-1');
-    setupFileDrop('file-drop-zone-2', 'base2-file', 'file-name-2');
-
-    const processButton = document.getElementById('process-button');
-    const downloadButton = document.getElementById('download-button');
-    
-    const resultsSection = document.getElementById('results-section');
-    const statusContainer = document.getElementById('status-container');
-    const statusMessage = document.getElementById('status-message');
-    const loader = document.getElementById('loader');
-    const downloadContainer = document.getElementById('download-container');
-
-
-    // Função para ler arquivo Excel e retornar os dados da aba especificada
-    function readExcelFile(file, sheetName) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const data = new Uint8Array(event.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    let targetSheetName = sheetName;
-                    if (!targetSheetName) {
-                        targetSheetName = workbook.SheetNames[0]; // Usa a primeira aba se nenhuma for especificada
+        // --- INÍCIO DA LÓGICA DE SIMILARIDADE (LEVENSHTEIN) ---
+        /**
+         * Calcula a distância Levenshtein entre duas strings.
+         * A distância é o número mínimo de edições de um caractere (inserções, exclusões ou substituições)
+         * necessárias para transformar uma string na outra.
+         * @param {string} s1 A primeira string.
+         * @param {string} s2 A segunda string.
+         * @returns {number} A distância de Levenshtein.
+         */
+        const levenshteinDistance = (s1, s2) => {
+            s1 = s1.toLowerCase();
+            s2 = s2.toLowerCase();
+            const costs = [];
+            for (let i = 0; i <= s1.length; i++) {
+                let lastValue = i;
+                for (let j = 0; j <= s2.length; j++) {
+                    if (i === 0) {
+                        costs[j] = j;
+                    } else if (j > 0) {
+                        let newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        }
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
                     }
-                    
-                    const worksheet = workbook.Sheets[targetSheetName];
-                    if (!worksheet) {
-                        reject(new Error(`Aba "${targetSheetName}" não encontrada no arquivo.`));
-                        return;
-                    }
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-                    resolve(jsonData);
-                } catch (err) {
-                    reject(err);
                 }
+                if (i > 0) costs[s2.length] = lastValue;
+            }
+            return costs[s2.length];
+        };
+
+        /**
+         * Calcula a porcentagem de similaridade entre duas strings com base na distância de Levenshtein.
+         * @param {string} s1 A primeira string.
+         * @param {string} s2 A segunda string.
+         * @returns {number} A similaridade em porcentagem (0-100).
+         */
+        const calculateSimilarity = (s1, s2) => {
+            let longer = s1;
+            let shorter = s2;
+            if (s1.length < s2.length) {
+                longer = s2;
+                shorter = s1;
+            }
+            const longerLength = longer.length;
+            if (longerLength === 0) {
+                return 100;
+            }
+            const distance = levenshteinDistance(longer, shorter);
+            return ((longerLength - distance) / longerLength) * 100;
+        };
+        // --- FIM DA LÓGICA DE SIMILARIDADE ---
+
+
+        // Armazena os resultados finais e os arquivos carregados
+        let finalResults = [];
+        let file1, file2;
+
+        // Lógica para arrastar e soltar arquivos
+        function setupFileDrop(zoneId, inputId, nameId, fileVarSetter, sheetSelectId, columnSelectId) {
+            const dropZone = document.getElementById(zoneId);
+            const fileInput = document.getElementById(inputId);
+            const fileNameSpan = document.getElementById(nameId);
+
+            const handleFile = (selectedFile) => {
+                if (!selectedFile) return;
+                fileNameSpan.textContent = selectedFile.name;
+                fileVarSetter(selectedFile);
+                populateSheetDropdown(selectedFile, sheetSelectId, columnSelectId);
             };
-            reader.onerror = (error) => reject(error);
-            reader.readAsArrayBuffer(file);
-        });
-    }
 
-    function showStatus(message, isLoading = false) {
-        resultsSection.classList.remove('hidden');
-        statusContainer.classList.remove('hidden');
-        statusMessage.textContent = message;
-        if (isLoading) {
-            loader.classList.remove('hidden');
-            downloadContainer.classList.add('hidden');
-        } else {
-            loader.classList.add('hidden');
-        }
-    }
-
-    function hideStatus() {
-        statusContainer.classList.add('hidden');
-    }
-
-    function displayResultsPreview(data) {
-        const table = document.getElementById('results-table');
-        table.innerHTML = ''; // Limpa a tabela anterior
-
-        if (data.length === 0) {
-            hideStatus();
-            return;
-        }
-
-        const previewData = data.slice(0, 10); // Mostra apenas as 10 primeiras linhas
-
-        // Cria o cabeçalho
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        headerRow.className = 'bg-slate-100';
-        const headers = Object.keys(previewData[0]);
-        headers.forEach(headerText => {
-            const th = document.createElement('th');
-            th.textContent = headerText;
-            th.className = 'px-4 py-2 text-left text-sm font-semibold text-slate-600';
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-
-        // Cria o corpo da tabela
-        const tbody = document.createElement('tbody');
-        previewData.forEach(rowData => {
-            const row = document.createElement('tr');
-            row.className = 'border-b border-slate-200';
-            headers.forEach(header => {
-                const td = document.createElement('td');
-                td.textContent = rowData[header];
-                td.className = 'px-4 py-2 text-sm text-slate-700';
-                row.appendChild(td);
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('bg-blue-50', 'border-blue-400'); });
+            dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('bg-blue-50', 'border-blue-400'); });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('bg-blue-50', 'border-blue-400');
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFile(fileInput.files[0]);
+                }
             });
-            tbody.appendChild(row);
-        });
-        table.appendChild(tbody);
-    }
-    
-    // Função principal que executa o processo de combinação
-    processButton.addEventListener('click', async () => {
-        // 1. Coleta dos dados do formulário
-        const file1 = document.getElementById('base1-file').files[0];
-        const sheet1 = document.getElementById('base1-sheet').value.trim();
-        const column1 = document.getElementById('base1-column').value.trim();
-        
-        const file2 = document.getElementById('base2-file').files[0];
-        const sheet2 = document.getElementById('base2-sheet').value.trim();
-        const column2 = document.getElementById('base2-column').value.trim();
-
-        const scoreThreshold = parseInt(document.getElementById('score-threshold').value, 10);
-
-        // 2. Validação dos inputs
-        if (!file1 || !file2 || !column1 || !column2) {
-            alert('Por favor, preencha todos os campos obrigatórios: arquivos e nomes das colunas.');
-            return;
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length) {
+                    handleFile(fileInput.files[0]);
+                } else {
+                    fileNameSpan.textContent = 'Arraste e solte o arquivo ou clique aqui';
+                }
+            });
         }
 
-        showStatus('Iniciando o processamento...', true);
+        // Função para popular a lista de abas (sheets)
+        async function populateSheetDropdown(file, sheetSelectId, columnSelectId) {
+            const sheetSelect = document.getElementById(sheetSelectId);
+            const columnSelect = document.getElementById(columnSelectId);
 
-        try {
-            // 3. Leitura dos arquivos Excel
-            showStatus('Lendo os arquivos Excel...', true);
-            const data1 = await readExcelFile(file1, sheet1);
-            const data2 = await readExcelFile(file2, sheet2);
+            sheetSelect.innerHTML = '<option value="">Carregando abas...</option>';
+            sheetSelect.disabled = true;
+            columnSelect.innerHTML = '<option value="">Selecione uma aba primeiro</option>';
+            columnSelect.disabled = true;
 
-            if (!data1.length || !data2.length) {
-                throw new Error("Um dos arquivos está vazio ou a aba especificada não contém dados.");
+            try {
+                const data = await file.arrayBuffer();
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                sheetSelect.innerHTML = '<option value="">Selecione uma aba</option>';
+                workbook.SheetNames.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    sheetSelect.appendChild(option);
+                });
+                sheetSelect.disabled = false;
+            } catch (error) {
+                showStatus(`Erro ao ler as abas do arquivo: ${error.message}`, false, true);
+                sheetSelect.innerHTML = '<option value="">Erro ao carregar</option>';
             }
-            if (!data1[0].hasOwnProperty(column1) || !data2[0].hasOwnProperty(column2)) {
-                throw new Error("Nome da coluna não encontrado em um dos arquivos. Verifique a digitação.");
-            }
+        }
 
-            // 4. Lógica de Fuzzy Matching
-            showStatus(`Combinando ${data1.length} registros... Isso pode levar um momento.`, true);
+        // Função para popular a lista de colunas
+        async function populateColumnDropdown(file, sheetName, columnSelectId) {
+            if (!file || !sheetName) return;
+
+            const columnSelect = document.getElementById(columnSelectId);
+            columnSelect.innerHTML = '<option value="">Carregando colunas...</option>';
+            columnSelect.disabled = true;
+
+            try {
+                const data = await readExcelFile(file, sheetName);
+                if (!data.length) {
+                    throw new Error("A aba selecionada está vazia.");
+                }
+                
+                columnSelect.innerHTML = '<option value="">Selecione uma coluna</option>';
+                const headers = Object.keys(data[0]);
+                headers.forEach(header => {
+                    const option = document.createElement('option');
+                    option.value = header;
+                    option.textContent = header;
+                    columnSelect.appendChild(option);
+                });
+                columnSelect.disabled = false;
+            } catch (error) {
+                showStatus(`Erro ao ler as colunas: ${error.message}`, false, true);
+                columnSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        // Inicialização
+        setupFileDrop('file-drop-zone-1', 'base1-file', 'file-name-1', (f) => file1 = f, 'base1-sheet', 'base1-column');
+        setupFileDrop('file-drop-zone-2', 'base2-file', 'file-name-2', (f) => file2 = f, 'base2-sheet', 'base2-column');
+        
+        document.getElementById('base1-sheet').addEventListener('change', (e) => populateColumnDropdown(file1, e.target.value, 'base1-column'));
+        document.getElementById('base2-sheet').addEventListener('change', (e) => populateColumnDropdown(file2, e.target.value, 'base2-column'));
+
+
+        const processButton = document.getElementById('process-button');
+        const downloadButton = document.getElementById('download-button');
+        const resultsSection = document.getElementById('results-section');
+        const statusContainer = document.getElementById('status-container');
+        const statusMessage = document.getElementById('status-message');
+        const loader = document.getElementById('loader');
+        const downloadContainer = document.getElementById('download-container');
+
+        function readExcelFile(file, sheetName) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = new Uint8Array(event.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        const worksheet = workbook.Sheets[sheetName];
+                        if (!worksheet) {
+                            reject(new Error(`Aba "${sheetName}" não encontrada no arquivo.`));
+                            return;
+                        }
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                        resolve(jsonData);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = (error) => reject(new Error("Ocorreu um erro ao tentar ler o arquivo."));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function showStatus(message, isLoading = false, isError = false) {
+            resultsSection.classList.remove('hidden');
+            statusContainer.classList.remove('hidden');
+            statusMessage.textContent = message;
+
+            if (isError) {
+                statusMessage.classList.remove('text-slate-600');
+                statusMessage.classList.add('text-red-600');
+                loader.classList.add('hidden');
+            } else {
+                statusMessage.classList.remove('text-red-600');
+                statusMessage.classList.add('text-slate-600');
+                if (isLoading) {
+                    loader.classList.remove('hidden');
+                    downloadContainer.classList.add('hidden');
+                } else {
+                    loader.classList.add('hidden');
+                }
+            }
+        }
+
+        function displayResultsPreview(data) {
+            const table = document.getElementById('results-table');
+            table.innerHTML = ''; 
+            if (data.length === 0) return;
+
+            const previewData = data.slice(0, 10);
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            headerRow.className = 'bg-slate-100';
+            const headers = Object.keys(previewData[0]);
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                th.className = 'px-4 py-2 text-left text-sm font-semibold text-slate-600';
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
             
-            // Prepara a lista de opções da Base 2 para a busca
-            const choices = data2.map(row => String(row[column2]));
-            const matches = [];
+            const tbody = document.createElement('tbody');
+            previewData.forEach(rowData => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-slate-200';
+                headers.forEach(header => {
+                    const td = document.createElement('td');
+                    td.textContent = rowData[header];
+                    td.className = 'px-4 py-2 text-sm text-slate-700';
+                    row.appendChild(td);
+                });
+                tbody.appendChild(row);
+            });
+            table.appendChild(tbody);
+        }
+        
+        processButton.addEventListener('click', async () => {
+            const sheet1 = document.getElementById('base1-sheet').value;
+            const column1 = document.getElementById('base1-column').value;
+            const sheet2 = document.getElementById('base2-sheet').value;
+            const column2 = document.getElementById('base2-column').value;
+            const scoreThreshold = parseInt(document.getElementById('score-threshold').value, 10);
 
-            // Simula um processamento assíncrono para não travar a UI em grandes arquivos
-            await new Promise(resolve => setTimeout(resolve, 50));
+            if (!file1 || !file2 || !sheet1 || !column1 || !sheet2 || !column2) {
+                showStatus('Por favor, selecione os arquivos, abas e colunas para continuar.', false, true);
+                return;
+            }
 
-            data1.forEach((row1, index1) => {
-                const query = String(row1[column1]);
-                if (!query) return;
+            showStatus('Iniciando o processamento...', true);
+            try {
+                showStatus('Lendo os dados das planilhas...', true);
+                const data1 = await readExcelFile(file1, sheet1);
+                const data2 = await readExcelFile(file2, sheet2);
 
-                // Usa fuzzball.extractOne para encontrar a melhor correspondência
-                const bestMatch = fuzzball.extractOne(query, choices, {
-                    scorer: fuzzball.partial_ratio,
-                    score_cutoff: scoreThreshold
+                if (!data1.length || !data2.length) {
+                    throw new Error("Um dos arquivos ou abas selecionadas está vazio.");
+                }
+                
+                showStatus(`Combinando ${data1.length} registros... Isso pode levar um momento.`, true);
+                
+                const matches = [];
+
+                await new Promise(resolve => setTimeout(resolve, 50)); // Libera a UI para atualizar
+
+                data1.forEach((row1) => {
+                    const query = String(row1[column1] || '');
+                    if (!query) return;
+
+                    let bestMatch = { score: -1, row: null, value: null };
+
+                    data2.forEach((row2) => {
+                        const choice = String(row2[column2] || '');
+                        if (!choice) return;
+
+                        const score = calculateSimilarity(query, choice);
+                        if (score > bestMatch.score) {
+                            bestMatch = { score: score, row: row2, value: choice };
+                        }
+                    });
+
+                    if (bestMatch.score >= scoreThreshold) {
+                        const suffixedRow2 = {};
+                        for (const key in bestMatch.row) {
+                            suffixedRow2[`${key}_base2`] = bestMatch.row[key];
+                        }
+                        
+                        matches.push({
+                            'Chave_Base1': query, ...row1,
+                            'Chave_Encontrada_Base2': bestMatch.value,
+                            'Score': Math.round(bestMatch.score), ...suffixedRow2,
+                        });
+                    }
                 });
 
-                if (bestMatch) {
-                    const [matchValue, score, index2] = bestMatch;
-                    const row2 = data2[index2];
+                finalResults = matches;
 
-                    // Renomeia colunas da base 2 para evitar conflitos ao juntar
-                    const suffixedRow2 = {};
-                    for (const key in row2) {
-                        suffixedRow2[`${key}_base2`] = row2[key];
-                    }
-                    
-                    // Combina os dados
-                    matches.push({
-                        'Chave_Base1': query,
-                        ...row1,
-                        'Chave_Encontrada_Base2': matchValue,
-                        'Score': Math.round(score),
-                        ...suffixedRow2,
-                    });
+                if (finalResults.length > 0) {
+                    showStatus(`Processo concluído! ${finalResults.length} correspondências encontradas.`);
+                    downloadContainer.classList.remove('hidden');
+                    displayResultsPreview(finalResults);
+                } else {
+                    showStatus('Nenhuma correspondência encontrada com a pontuação mínima especificada.', false, true);
+                    document.getElementById('results-table').innerHTML = '';
+                    downloadContainer.classList.add('hidden');
                 }
-            });
-
-            finalResults = matches;
-
-            // 5. Exibição dos resultados
-            if (finalResults.length > 0) {
-                showStatus(`Processo concluído! ${finalResults.length} correspondências encontradas.`);
-                downloadContainer.classList.remove('hidden');
-                displayResultsPreview(finalResults);
-            } else {
-                showStatus('Nenhuma correspondência encontrada com a pontuação mínima especificada.');
-                document.getElementById('results-table').innerHTML = '';
+            } catch (error) {
+                console.error(error);
+                showStatus(`Erro: ${error.message}`, false, true);
             }
+        });
 
-        } catch (error) {
-            console.error(error);
-            showStatus(`Erro: ${error.message}`);
-            alert(`Ocorreu um erro: ${error.message}`);
-        }
+        downloadButton.addEventListener('click', () => {
+            if (finalResults.length === 0) {
+                showStatus('Não há dados para download.', false, true);
+                return;
+            }
+            const worksheet = XLSX.utils.json_to_sheet(finalResults);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Resultados');
+            XLSX.writeFile(workbook, 'Resultado_Combinado.xlsx');
+        });
     });
-
-    // Função para fazer o download do resultado em Excel
-    downloadButton.addEventListener('click', () => {
-        if (finalResults.length === 0) {
-            alert('Não há dados para download.');
-            return;
-        }
-        
-        const worksheet = XLSX.utils.json_to_sheet(finalResults);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Resultados');
-        
-        // Gera o arquivo e inicia o download
-        XLSX.writeFile(workbook, 'Resultado_Combinado.xlsx');
-    });
-
 </script>
 
 </body>
 </html>
+
